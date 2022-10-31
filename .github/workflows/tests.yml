@@ -1,0 +1,216 @@
+name: Tests
+on:
+  repository_dispatch:
+    types: [ test ]
+
+jobs:
+  get-affected:
+    name: Get affected projects
+    runs-on: ubuntu-latest
+    outputs:
+      affected: ${{ steps.affected.outputs.affected }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_ADMIN_TOKEN }}
+          fetch-depth: 0
+          repository: ${{ secrets.REPOSITORY }}
+          ref: ${{ github.event.client_payload.github.ref }}
+
+      - name: Set Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci && npm ci --prefix .github/actions
+
+      - name: Affected
+        id: affected
+        uses: ./.github/actions/list-affected
+        with:
+          base: 'origin/test'
+          head: 'HEAD'
+
+      - name: Output vars
+        run: |
+          echo "Affected: ${{ steps.affected.outputs.affected }}"
+          echo "Affected JSON: ${{ fromJSON(steps.affected.outputs.affected) }}"
+
+  units:
+    name: Unit tests & linting
+    runs-on: ubuntu-latest
+    env:
+      NX_BRANCH: ${{ github.event.client_payload.number || github.event.client_payload.ref }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_ADMIN_TOKEN }}
+          fetch-depth: 0
+          repository: ${{ secrets.REPOSITORY }}
+          ref: ${{ github.event.client_payload.github.ref }}
+
+      - name: Create GitHub App Installation Token
+        uses: jnwng/github-app-installation-token-action@v2
+        id: installation_token
+        with:
+          appId: ${{ secrets.GH_APP_ID }}
+          installationId: ${{ secrets.GH_APP_INSTALLATION_ID }}
+          privateKey: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - uses: LouisBrunner/checks-action@v1.1.1
+        if: always()
+        with:
+          check_id: ${{github.event.client_payload.unit_tests_check_id}}
+          token: ${{ steps.installation_token.outputs.token }}
+          sha: ${{github.event.client_payload.github.sha}}
+          status: "in_progress"
+          repo: ${{ secrets.REPOSITORY }}
+          details_url: ${{ github.server_url }}/TheUnderScorer/tvgether/actions/runs/${{ github.run_id }}
+
+      - name: Set Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Cache
+        uses: actions/cache@v2
+        id: npm-cache
+        with:
+          path: node_modules
+          key: nodemodules-${{ hashFiles('package-lock.json') }}
+          restore-keys: nodemodules-
+
+      - name: Install npm dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm install
+
+      - name: Create .env file
+        run: |
+          echo "NX_ENABLE_DEBUG=true" >> .env
+
+      - name: Lint
+        run: npx nx affected --target=lint --base=origin/test --head=HEAD --parallel=3
+
+      - name: Test
+        run: npx nx affected --target=test --base=origin/test --head=HEAD --parallel=3
+        env:
+          SHORT_BREAK_DURATION_SECONDS: 5
+          LONG_BREAK_DURATION_SECONDS: 15
+          WORK_DURATION_SECONDS: 10
+          LONG_BREAK_INTERVAL: 4
+          AUTO_RUN_WORK: false
+          AUTO_RUN_BREAK: false
+          DB_ENGINE: better-sqlite3
+          NX_RECAPTCHA_KEY: recaptcha-key
+
+      - uses: LouisBrunner/checks-action@v1.1.1
+        if: always()
+        with:
+          token: ${{ steps.installation_token.outputs.token }}
+          sha: ${{github.event.client_payload.github.sha}}
+          conclusion: ${{ job.status }}
+          status: "completed"
+          repo: ${{ secrets.REPOSITORY }}
+          check_id: ${{github.event.client_payload.unit_tests_check_id}}
+          details_url: ${{ github.server_url }}/TheUnderScorer/tvgether/actions/runs/${{ github.run_id }}/jobs/${{ github.job }}
+
+  e2e-browser-extension:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ 'ubuntu-latest' ]
+    name: Browser Extension e2e tests
+    runs-on: ${{ matrix.os }}
+    if: ${{ fromJSON(needs.get-affected.outputs.affected).browser-extension }}
+    env:
+      NX_BRANCH: ${{ github.event.client_payload.number || github.event.client_payload.ref }}
+    needs:
+      - get-affected
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_ADMIN_TOKEN }}
+          fetch-depth: 0
+          repository: ${{ secrets.REPOSITORY }}
+          ref: ${{ github.event.client_payload.github.ref }}
+
+      - name: Create GitHub App Installation Token
+        uses: jnwng/github-app-installation-token-action@v2
+        id: installation_token
+        with:
+          appId: ${{ secrets.GH_APP_ID }}
+          installationId: ${{ secrets.GH_APP_INSTALLATION_ID }}
+          privateKey: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - uses: LouisBrunner/checks-action@v1.1.1
+        if: always()
+        with:
+          check_id: ${{github.event.client_payload.e2e_browser_extension_check_id}}
+          token: ${{ steps.installation_token.outputs.token }}
+          sha: ${{github.event.client_payload.github.sha}}
+          status: "in_progress"
+          repo: ${{ secrets.REPOSITORY }}
+          details_url: ${{ github.server_url }}/TheUnderScorer/tvgether/actions/runs/${{ github.run_id }}
+
+      - name: Set Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Setup playwright
+        run: npx playwright install-deps && npx playwright install
+
+      - name: Create .env file
+        run: |
+          echo "NX_TRELLO_API_KEY=${{ secrets.TRELLO_API_KEY }}" >> .env
+          echo "NX_TRELLO_TOKEN=${{ secrets.TRELLO_TOKEN }}" >> .env
+          echo "NX_ENABLE_DEBUG=true" >> .env
+
+      - name: Build extension
+        run: npx nx build browser-extension --production --skip-nx-cache
+
+      - name: Run headless test
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: npx nx run browser-extension-e2e:e2e --skip-nx-cache
+
+      - name: Upload Artifact
+        if: always()
+        uses: actions/upload-artifact@v1
+        with:
+          name: browser-extension
+          path: dist/apps/browser-extension
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ failure() }}
+        with:
+          name: test-artifact-${{ matrix.os }}-browser-extension
+          path: artifacts
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ failure() }}
+        with:
+          name: browser-contexts
+          path: apps/browser-extension-e2e/src/contexts/**/chrome_debug.log
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ failure() }}
+        with:
+          name: trace-${{ matrix.os }}-browser-extension
+          path: test-results
+
+      - uses: LouisBrunner/checks-action@v1.1.1
+        if: always()
+        with:
+          token: ${{ steps.installation_token.outputs.token }}
+          sha: ${{github.event.client_payload.github.sha}}
+          conclusion: ${{ job.status }}
+          status: "completed"
+          repo: ${{ secrets.REPOSITORY }}
+          check_id: ${{github.event.client_payload.e2e_browser_extension_check_id}}
+          details_url: ${{ github.server_url }}/TheUnderScorer/tvgether/actions/runs/${{ github.run_id }}/jobs/${{ github.job }}
+
