@@ -23,7 +23,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm ci && npm ci --prefix .github/actions
+        run: npm install && npm install --prefix .github/actions
 
       - name: Affected
         id: affected
