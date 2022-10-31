@@ -170,6 +170,9 @@ jobs:
           echo "NX_TRELLO_TOKEN=${{ secrets.TRELLO_TOKEN }}" >> .env
           echo "NX_ENABLE_DEBUG=true" >> .env
 
+      - name: Start background services
+        run: npx nx run-many --target=serve --projects=server,video-playground --parallel --production & sleep 10
+
       - name: Build extension
         run: npx nx build browser-extension --production --skip-nx-cache
 
