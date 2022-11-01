@@ -195,8 +195,11 @@ jobs:
       - name: Migrate database
         run: npx nx run backend-db:migrate
 
-      - name: Start background services
-        run: npx nx run-many --target=serve --projects=server,video-playground --parallel --production & sleep 10
+      - name: Start server
+        run: npx nx run server:serve:production & sleep 10
+c
+      - name: Start video playground
+        run: npx nx run video-playground:serve:production & sleep 10
 
       - name: Build extension
         run: npx nx build browser-extension --production --skip-nx-cache
