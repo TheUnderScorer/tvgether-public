@@ -18,7 +18,7 @@ jobs:
           ref: ${{ github.event.client_payload.github.ref }}
 
       - name: Set Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
 
@@ -81,7 +81,7 @@ jobs:
           details_url: ${{ github.server_url }}/TheUnderScorer/tvgether/actions/runs/${{ github.run_id }}
 
       - name: Set Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
 
@@ -166,7 +166,7 @@ jobs:
           details_url: ${{ github.server_url }}/TheUnderScorer/tvgether/actions/runs/${{ github.run_id }}
 
       - name: Set Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
 
