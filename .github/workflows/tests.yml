@@ -187,9 +187,7 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "NX_TRELLO_API_KEY=${{ secrets.TRELLO_API_KEY }}" >> .env
-          echo "NX_TRELLO_TOKEN=${{ secrets.TRELLO_TOKEN }}" >> .env
-          echo "NX_ENABLE_DEBUG=true" >> .env
+          cp .env.dist .env
 
       - name: Start background services
         run: npx nx run-many --target=serve --projects=server,video-playground --parallel --production & sleep 10
