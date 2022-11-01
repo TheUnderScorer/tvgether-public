@@ -197,7 +197,7 @@ jobs:
 
       - name: Start server
         run: npx nx run server:serve:production & sleep 10
-c
+
       - name: Start video playground
         run: npx nx run video-playground:serve:production & sleep 10
 
