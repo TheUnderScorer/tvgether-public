@@ -1,0 +1,100 @@
+name: Deploy server
+on:
+  repository_dispatch:
+    types: [ deploy-server ]
+
+jobs:
+  get-data:
+    name: Get data
+    if: ${{ github.event.client_payload.github.event_name != 'create' || contains(github.event.client_payload.github.ref, 'server-v') }}
+    runs-on: ubuntu-latest
+    outputs:
+      env: ${{ steps.get_env.outputs.env }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_ADMIN_TOKEN }}
+          fetch-depth: 0
+          repository: ${{ secrets.REPOSITORY }}
+          ref: ${{ github.event.client_payload.github.event.client_payload.github.ref }}
+
+      - name: Set Node.js 16.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+
+      - name: Install npm dependencies
+        run: npm install --prefix .github/actions
+
+      - name: Get tag
+        id: get_tag
+        uses: ./.github/actions/tag-provider
+        with:
+          ghRef: ${{ github.event.client_payload.github.ref }}
+
+      - name: Get env
+        id: get_env
+        uses: ./.github/actions/env-provider
+        with:
+          tag: ${{ steps.get_tag.outputs.tag }}
+          envFromInput: ${{ github.event.client_payload.enviroment }}
+      - name: Output vars
+        run: |
+          echo "Env: ${{ steps.get_env.outputs.env }}"
+          echo "Ref: ${{ github.event.client_payload.github.ref }}"
+          echo "Input env: ${{ github.event.client_payload.enviroment }}"
+
+  deploy-server:
+    name: Deploy server
+    needs:
+      - get-data
+    environment: ${{ needs.get-data.outputs.env }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_ADMIN_TOKEN }}
+          fetch-depth: 0
+          repository: ${{ secrets.REPOSITORY }}
+          ref: ${{ github.event.client_payload.github.ref }}
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Login to registry
+        run: doctl registry login
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+
+      - name: Cache
+        uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: node_modules
+          key: nodemodules-${{ hashFiles('package-lock.json') }}
+          restore-keys: nodemodules-
+
+      - name: Install npm dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm install
+
+      - name: Build server
+        run: npx nx run server:build:production
+
+      - name: Tag image
+        run: docker tag tvgether-server registry.digitalocean.com/tvgether/server:latest
+
+      - name: Install database certificate
+        run: curl --create-dirs -o $HOME/.postgresql/root.crt -O ${{ secrets.DATABASE_CERTIFICATE }}
+
+      - name: Migrate database
+        run: npx nx run backend-db:migrate-deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Push image
+        run: docker push registry.digitalocean.com/tvgether/server:latest
