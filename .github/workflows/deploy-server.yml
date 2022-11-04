@@ -83,7 +83,7 @@ jobs:
         run: npm install
 
       - name: Build server
-        run: npx nx run server:build:production
+        run: npx nx run server:build-docker
 
       - name: Tag image
         run: docker tag tvgether-server registry.digitalocean.com/tvgether/server:latest
