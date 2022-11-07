@@ -7,6 +7,8 @@ jobs:
   get-affected:
     name: Get affected projects
     runs-on: ubuntu-latest
+    env:
+      NX_BRANCH: ${{ github.event.client_payload.number || github.event.client_payload.ref }}
     outputs:
       affected: ${{ steps.affected.outputs.affected }}
     steps:
