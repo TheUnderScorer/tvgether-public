@@ -248,3 +248,90 @@ jobs:
           check_id: ${{github.event.client_payload.e2e_browser_extension_check_id}}
           details_url: ${{ github.server_url }}/TheUnderScorer/tvgether/actions/runs/${{ github.run_id }}/jobs/${{ github.job }}
 
+  e2e-server:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ 'ubuntu-latest' ]
+    name: Server e2e tests
+    runs-on: ${{ matrix.os }}
+    if: ${{ fromJSON(needs.get-affected.outputs.affected).server }}
+    env:
+      NX_BRANCH: ${{ github.event.client_payload.number || github.event.client_payload.ref }}
+    needs:
+      - get-affected
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_ADMIN_TOKEN }}
+          fetch-depth: 0
+          repository: ${{ secrets.REPOSITORY }}
+          ref: ${{ github.event.client_payload.github.ref }}
+
+      - name: Create GitHub App Installation Token
+        uses: jnwng/github-app-installation-token-action@v2
+        id: installation_token
+        with:
+          appId: ${{ secrets.GH_APP_ID }}
+          installationId: ${{ secrets.GH_APP_INSTALLATION_ID }}
+          privateKey: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - uses: LouisBrunner/checks-action@v1.1.1
+        if: always()
+        with:
+          check_id: ${{github.event.client_payload.e2e_server_check_id}}
+          token: ${{ steps.installation_token.outputs.token }}
+          sha: ${{github.event.client_payload.github.sha}}
+          status: "in_progress"
+          repo: ${{ secrets.REPOSITORY }}
+          details_url: ${{ github.server_url }}/TheUnderScorer/tvgether/actions/runs/${{ github.run_id }}
+
+      - name: Set Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Cache
+        uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: node_modules
+          key: nodemodules-${{ hashFiles('package-lock.json') }}
+          restore-keys: nodemodules-
+
+      - name: Install npm dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm install
+
+      - name: Create .env file
+        run: |
+          cp .env.dist .env
+
+      - name: Build server
+        run: npx nx run server:build:production
+
+      - name: Start database
+        run: docker-compose up -d db && sleep 10
+
+      - name: Migrate database
+        run: npx nx run backend-db:migrate
+
+      - name: Start server
+        run: docker compose up -d server && sleep 10
+
+      - name: Run server tests
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: npx nx run server-e2e:e2e
+
+      - uses: LouisBrunner/checks-action@v1.1.1
+        if: always()
+        with:
+          token: ${{ steps.installation_token.outputs.token }}
+          sha: ${{github.event.client_payload.github.sha}}
+          conclusion: ${{ job.status }}
+          status: "completed"
+          repo: ${{ secrets.REPOSITORY }}
+          check_id: ${{github.event.client_payload.e2e_server_check_id}}
+          details_url: ${{ github.server_url }}/TheUnderScorer/tvgether/actions/runs/${{ github.run_id }}/jobs/${{ github.job }}
+
