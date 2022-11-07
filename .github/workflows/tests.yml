@@ -191,14 +191,14 @@ jobs:
         run: |
           cp .env.dist .env
 
-      - name: Build server
-        run: npx nx run server:build:production
-
       - name: Start database
         run: docker-compose up -d db && sleep 10
 
       - name: Migrate database
-        run: npx nx run backend-db:migrate
+        run: npx nx run backend-db:generate && npx nx run backend-db:migrate
+
+      - name: Build server
+        run: npx nx run server:build:production
 
       - name: Start server
         run: docker compose up -d server && sleep 10
@@ -309,14 +309,14 @@ jobs:
         run: |
           cp .env.dist .env
 
-      - name: Build server
-        run: npx nx run server:build:production
-
       - name: Start database
         run: docker-compose up -d db && sleep 10
 
       - name: Migrate database
-        run: npx nx run backend-db:migrate
+        run: npx nx run backend-db:generate && npx nx run backend-db:migrate
+
+      - name: Build server
+        run: npx nx run server:build:production
 
       - name: Start server
         run: docker compose up -d server && sleep 10
