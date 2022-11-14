@@ -85,11 +85,6 @@ jobs:
           name: browser-extension
           path: dist/apps/browser-extension
 
-      - uses: vimtor/action-zip@v1
-        with:
-          files: dist/apps/browser-extension
-          dest: dist/apps/browser-extension.zip
-
       - name: Upload file to release
         if: ${{ needs.get-data.outputs.tag }}
         uses: svenstaro/upload-release-action@v2
