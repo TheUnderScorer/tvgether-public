@@ -103,6 +103,9 @@ jobs:
         run: |
           echo "NX_ENABLE_DEBUG=true" >> .env
 
+      - name: Generate types
+        run: npx nx run backend-db:generate
+
       - name: Lint
         run: npx nx affected --target=lint --base=origin/test --head=HEAD --parallel=3
 
