@@ -332,6 +332,8 @@ jobs:
         uses: GabrielBB/xvfb-action@v1
         with:
           run: npx nx run server-e2e:e2e
+        env:
+          NX_ENABLE_DEBUG: false
 
       - uses: LouisBrunner/checks-action@v1.1.1
         if: always()
