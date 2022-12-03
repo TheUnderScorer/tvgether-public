@@ -329,9 +329,7 @@ jobs:
         run: docker compose up -d server && sleep 10
 
       - name: Run server tests
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          run: npx nx run server-e2e:e2e
+        run: npx nx run server-e2e:e2e
         env:
           NX_ENABLE_DEBUG: false
 
