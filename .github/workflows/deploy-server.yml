@@ -94,13 +94,5 @@ jobs:
       - name: Tag image
         run: docker tag tvgether-server registry.digitalocean.com/tvgether/server:latest
 
-      - name: Install database certificate
-        run: curl --create-dirs -o $HOME/.postgresql/root.crt -O ${{ secrets.DATABASE_CERTIFICATE }}
-
-      - name: Migrate database
-        run: npx nx run backend-db:migrate-deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
       - name: Push image
         run: docker push registry.digitalocean.com/tvgether/server:latest
