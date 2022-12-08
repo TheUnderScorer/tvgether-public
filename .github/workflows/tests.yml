@@ -213,7 +213,7 @@ jobs:
       - name: Build extension
         run: npx nx build browser-extension --production --skip-nx-cache
 
-      - name: Run headless test
+      - name: Run tests
         uses: GabrielBB/xvfb-action@v1
         with:
           run: npx nx run browser-extension-e2e:e2e  --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
@@ -325,10 +325,14 @@ jobs:
       - name: Start server
         run: docker compose up -d server && sleep 10
 
-      - name: Run server tests
+      - name: Run tests
         run: npx nx run server-e2e:e2e
         env:
           NX_ENABLE_DEBUG: false
+
+      - name: Print server logs
+        if: ${{ always() }}
+        run: docker compose logs server
 
       - uses: LouisBrunner/checks-action@v1.1.1
         if: always()
