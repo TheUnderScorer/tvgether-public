@@ -136,7 +136,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ 'ubuntu-latest' ]
+        shardIndex: [ 1, 2, 3, 4, 5 ]
+        shardTotal: [ 5 ]
     name: Browser Extension e2e tests
     runs-on: ${{ matrix.os }}
     if: ${{ fromJSON(needs.get-affected.outputs.affected).browser-extension }}
@@ -215,7 +216,7 @@ jobs:
       - name: Run headless test
         uses: GabrielBB/xvfb-action@v1
         with:
-          run: npx nx run browser-extension-e2e:e2e
+          run: npx nx run browser-extension-e2e:e2e  --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload Artifact
         if: always()
@@ -258,12 +259,8 @@ jobs:
           details_url: ${{ github.server_url }}/TheUnderScorer/tvgether/actions/runs/${{ github.run_id }}/jobs/${{ github.job }}
 
   e2e-server:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ 'ubuntu-latest' ]
     name: Server e2e tests
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     if: ${{ fromJSON(needs.get-affected.outputs.affected).server }}
     env:
       NX_BRANCH: ${{ github.event.client_payload.number || github.event.client_payload.ref }}
