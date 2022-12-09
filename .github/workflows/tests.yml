@@ -326,7 +326,7 @@ jobs:
         run: docker compose up -d server && sleep 10
 
       - name: Run tests
-        run: npx nx run server-e2e:e2e
+        run: npx nx run server-e2e:e2e --runInBand
         env:
           NX_ENABLE_DEBUG: false
 
