@@ -115,14 +115,7 @@ jobs:
       - name: Test
         run: npx nx affected --target=test --base=origin/test --head=HEAD --parallel=3
         env:
-          SHORT_BREAK_DURATION_SECONDS: 5
-          LONG_BREAK_DURATION_SECONDS: 15
-          WORK_DURATION_SECONDS: 10
-          LONG_BREAK_INTERVAL: 4
-          AUTO_RUN_WORK: false
-          AUTO_RUN_BREAK: false
-          DB_ENGINE: better-sqlite3
-          NX_RECAPTCHA_KEY: recaptcha-key
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/db
 
       - uses: LouisBrunner/checks-action@v1.1.1
         if: always()
