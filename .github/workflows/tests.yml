@@ -103,8 +103,11 @@ jobs:
         run: |
           echo "NX_ENABLE_DEBUG=true" >> .env
 
-      - name: Generate types
-        run: npx nx run backend-db:generate
+      - name: Start database
+        run: docker-compose up -d db && sleep 10
+
+      - name: Migrate database
+        run: npx nx run backend-db:generate && npx nx run backend-db:migrate
 
       - name: Lint
         run: npx nx affected --target=lint --base=origin/test --head=HEAD --parallel=3
