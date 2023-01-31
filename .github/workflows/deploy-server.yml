@@ -58,41 +58,10 @@ jobs:
           repository: ${{ secrets.REPOSITORY }}
           ref: ${{ github.event.client_payload.github.ref }}
 
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Install Railway
+        run: npm i -g @railway/cli
 
-      - name: Login to registry
-        run: doctl registry login
-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 16.x
-
-      - name: Cache
-        uses: actions/cache@v3
-        id: npm-cache
-        with:
-          path: node_modules
-          key: nodemodules-${{ hashFiles('package-lock.json') }}
-          restore-keys: nodemodules-
-
-      - name: Install npm dependencies
-        if: steps.npm-cache.outputs.cache-hit != 'true'
-        run: npm install
-
-      - name: Generate types
-        run: npx nx run backend-db:generate
-
-      - name: Build server
-        run: npx nx run server:build:production
-
-      - name: Build server in docker
-        run: npx nx run server:build-docker
-
-      - name: Tag image
-        run: docker tag tvgether-server registry.digitalocean.com/tvgether/server:latest
-
-      - name: Push image
-        run: docker push registry.digitalocean.com/tvgether/server:latest
+      - name: Deploy
+        run: railway up
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
