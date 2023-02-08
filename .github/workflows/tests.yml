@@ -102,7 +102,7 @@ jobs:
       - name: Create .env file
         run: |
           echo "NX_ENABLE_DEBUG=true" >> .env
-          echo "NX_WEBSITE_URL=http://localhost:4200" >> .env
+          echo "NX_WEBSITE_URL=http://localhost:3000" >> .env
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/db" >> .env
 
       - name: Start database
@@ -204,7 +204,7 @@ jobs:
       - name: Start server
         run: docker compose up -d server && sleep 10
         env:
-          NX_WEBSITE_URL: http://localhost:4200
+          NX_WEBSITE_URL: http://localhost:3000
 
       - name: Start video playground
         run: npx nx run video-playground:serve:production & sleep 10
@@ -222,7 +222,7 @@ jobs:
       - name: Build extension
         run: npx nx build browser-extension --production --skip-nx-cache
         env:
-          NX_WEBSITE_URL: http://localhost:4200
+          NX_WEBSITE_URL: http://localhost:3000
 
       - name: Run tests
         uses: GabrielBB/xvfb-action@v1
@@ -336,7 +336,7 @@ jobs:
       - name: Start server
         run: docker compose up -d server && sleep 10
         env:
-          NX_WEBSITE_URL: http://localhost:4200
+          NX_WEBSITE_URL: http://localhost:3000
 
       - name: Run tests
         run: npx nx run server-e2e:e2e --runInBand
