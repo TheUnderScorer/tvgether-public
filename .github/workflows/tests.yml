@@ -206,6 +206,16 @@ jobs:
       - name: Start video playground
         run: npx nx run video-playground:serve:production & sleep 10
 
+      - name: Build website
+        run: npx nx build website --production
+
+      - name: Start website
+        working-directory: dist/apps/website
+        run: npm run start & sleep 10
+        env:
+          NX_SERVER_URL: http://localhost:8080
+          NX_CHROME_EXTENSION_STORE_URL: https://chrome.google.com/webstore/detail/tvgether/nnjgjgjgjgjgjgjgjgjgjgjg
+
       - name: Build extension
         run: npx nx build browser-extension --production --skip-nx-cache
 
