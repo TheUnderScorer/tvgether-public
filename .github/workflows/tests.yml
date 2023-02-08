@@ -203,6 +203,8 @@ jobs:
 
       - name: Start server
         run: docker compose up -d server && sleep 10
+        env:
+          NX_WEBSITE_URL: http://localhost:4200
 
       - name: Start video playground
         run: npx nx run video-playground:serve:production & sleep 10
@@ -333,6 +335,8 @@ jobs:
 
       - name: Start server
         run: docker compose up -d server && sleep 10
+        env:
+          NX_WEBSITE_URL: http://localhost:4200
 
       - name: Run tests
         run: npx nx run server-e2e:e2e --runInBand
