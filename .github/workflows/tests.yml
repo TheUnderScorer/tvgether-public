@@ -191,6 +191,7 @@ jobs:
         run: |
           cp .env.dist .env
           echo "NX_GIPHY_API_KEY=${{ secrets.GIPHY_API_KEY }}" >> .env
+          echo "NX_SKIP_RATE_LIMIT=true" >> .env
 
       - name: Start database
         run: docker-compose up -d db && sleep 10
@@ -323,6 +324,7 @@ jobs:
       - name: Create .env file
         run: |
           cp .env.dist .env
+          echo "NX_SKIP_RATE_LIMIT=true" >> .env
 
       - name: Start database
         run: docker-compose up -d db && sleep 10
