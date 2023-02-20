@@ -202,23 +202,18 @@ jobs:
       - name: Build server
         run: npx nx run server:build:production --skip-nx-cache
 
-      - name: Start server
-        run: docker compose up -d server && sleep 10
-        env:
-          NX_WEBSITE_URL: http://localhost:3000
-
-      - name: Start video playground
-        run: npx nx run video-playground:serve:production & sleep 10
-
       - name: Build website
         run: npx nx build website --production
 
-      - name: Start website
-        working-directory: dist/apps/website
-        run: npm run start & sleep 10
+      - name: Start server and webstie
+        run: docker compose up -d server website && sleep 10
         env:
-          NX_SERVER_URL: http://localhost:8080
+          NX_WEBSITE_URL: http://localhost:3000
           NX_CHROME_EXTENSION_STORE_URL: https://chrome.google.com/webstore/detail/tvgether/nnjgjgjgjgjgjgjgjgjgjgjg
+          NX_SERVER_URL: http://localhost:8080
+
+      - name: Start video playground
+        run: npx nx run video-playground:serve:production & sleep 10
 
       - name: Build extension
         run: npx nx build browser-extension --production --skip-nx-cache
@@ -258,6 +253,10 @@ jobs:
       - name: Print server logs
         if: ${{ always() }}
         run: docker compose logs server
+
+      - name: Print website logs
+        if: ${{ always() }}
+        run: docker compose logs website
 
       - uses: LouisBrunner/checks-action@v1.1.1
         if: always()
