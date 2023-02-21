@@ -203,7 +203,7 @@ jobs:
         run: npx nx run server:build:production --skip-nx-cache
 
       - name: Build website
-        run: npx nx build website --production
+        run: npx nx build website --production --skip-nx-cache
 
       - name: Start server and website
         run: docker compose up -d server website && sleep 10
@@ -219,6 +219,7 @@ jobs:
         run: npx nx build browser-extension --production --skip-nx-cache
         env:
           NX_WEBSITE_URL: http://localhost:3000
+          NX_SERVER_URL: http://localhost:8080
 
       - name: Run tests
         uses: GabrielBB/xvfb-action@v1
