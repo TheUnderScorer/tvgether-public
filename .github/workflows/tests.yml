@@ -205,7 +205,7 @@ jobs:
       - name: Build website
         run: npx nx build website --production --skip-nx-cache
         env:
-          NX_SERVER_URL: http://localhost:8080
+          NX_USE_SERVER_URL_RESOLVER: 'true'
 
       - name: Start server and website
         run: docker compose up -d server website && sleep 10
