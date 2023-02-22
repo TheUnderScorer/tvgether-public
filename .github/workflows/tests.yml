@@ -223,9 +223,7 @@ jobs:
           NX_SERVER_URL: http://localhost:8080
 
       - name: Run tests
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          run: npx nx run browser-extension-e2e:e2e  --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: npx nx run browser-extension-e2e:e2e  --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload Artifact
         if: always()
