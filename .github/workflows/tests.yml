@@ -247,7 +247,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ failure() }}
         with:
-          name: trace-${{ matrix.os }}-browser-extension
+          name: test-results-${{ matrix.os }}-browser-extension
           path: test-results
 
       - name: Print server logs
