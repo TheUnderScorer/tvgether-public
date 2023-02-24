@@ -19,9 +19,9 @@ jobs:
           ref: ${{ github.event.client_payload.github.ref }}
 
       - name: Set Node.js 16.x
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 19
 
       - name: Install npm dependencies
         run: npm install --prefix .github/actions
