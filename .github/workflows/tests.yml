@@ -51,6 +51,7 @@ jobs:
           echo "Affected JSON: ${{ fromJSON(steps.affected.outputs.affected) }}"
 
   units:
+    if: ${{ github.event.client_payload.update_snapshots == 'false' }}
     name: Unit tests & linting
     runs-on: ubuntu-latest
     env:
@@ -220,7 +221,46 @@ jobs:
           NX_SERVER_URL: http://localhost:8080
 
       - name: Run tests
+        if: ${{ github.event.client_payload.update_snapshots == 'false' }}
         run: npx nx run browser-extension-e2e:e2e  --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+
+      - name: Update snapshots
+        if: ${{ github.event.client_payload.update_snapshots == 'true' }}
+        run: npx nx run browser-extension-e2e:e2e  --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} -g 'UI snapshots'
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        if: ${{ github.event.client_payload.update_snapshots == 'true' }}
+        name: Commit changes
+        with:
+          commit_message: "test: update snapshots"
+
+          # Optional. Options used by `git-commit`.
+          # See https://git-scm.com/docs/git-commit#_options
+          commit_options: '--no-verify --signoff'
+
+          # Optional glob pattern of files which should be added to the commit
+          # Defaults to all (.)
+          # See the `pathspec`-documentation for git
+          # - https://git-scm.com/docs/git-add#Documentation/git-add.txt-ltpathspecgt82308203
+          # - https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefpathspecapathspec
+          file_pattern: '*.png'
+
+          # Optional. Local file path to the repository.
+          # Defaults to the root of the repository.
+          repository: .
+
+          # Optional. Disable dirty check and always try to create a commit and push
+          skip_dirty_check: true
+
+          # Optional. Skip internal call to `git fetch`
+          skip_fetch: true
+
+          # Optional. Skip internal call to `git checkout`
+          skip_checkout: true
+
+          # Optional. Prevents the shell from expanding filenames.
+          # Details: https://www.gnu.org/software/bash/manual/html_node/Filename-Expansion.html
+          disable_globbing: true
 
       - name: Upload Artifact
         if: always()
@@ -269,7 +309,7 @@ jobs:
   e2e-server:
     name: Server e2e tests
     runs-on: ubuntu-latest
-    if: ${{ fromJSON(needs.get-affected.outputs.affected).server }}
+    if: ${{ fromJSON(needs.get-affected.outputs.affected).server && github.event.client_payload.update_snapshots == 'false' }}
     env:
       NX_BRANCH: ${{ github.event.client_payload.number || github.event.client_payload.ref }}
     needs:
