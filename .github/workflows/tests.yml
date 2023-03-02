@@ -51,7 +51,7 @@ jobs:
           echo "Affected JSON: ${{ fromJSON(steps.affected.outputs.affected) }}"
 
   units:
-    if: ${{ github.event.client_payload.update_snapshots == 'false' }}
+    if: ${{ github.event.client_payload.update_snapshots != 'true' }}
     name: Unit tests & linting
     runs-on: ubuntu-latest
     env:
@@ -221,7 +221,7 @@ jobs:
           NX_SERVER_URL: http://localhost:8080
 
       - name: Run tests
-        if: ${{ github.event.client_payload.update_snapshots == 'false' }}
+        if: ${{ github.event.client_payload.update_snapshots != 'true' }}
         run: npx nx run browser-extension-e2e:e2e  --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Update snapshots
@@ -309,7 +309,7 @@ jobs:
   e2e-server:
     name: Server e2e tests
     runs-on: ubuntu-latest
-    if: ${{ fromJSON(needs.get-affected.outputs.affected).server && github.event.client_payload.update_snapshots == 'false' }}
+    if: ${{ fromJSON(needs.get-affected.outputs.affected).server && github.event.client_payload.update_snapshots != 'true' }}
     env:
       NX_BRANCH: ${{ github.event.client_payload.number || github.event.client_payload.ref }}
     needs:
