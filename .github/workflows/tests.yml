@@ -101,6 +101,7 @@ jobs:
       - name: Create .env file
         run: |
           echo "NX_ENABLE_DEBUG=true" >> .env
+          echo "NX_DISABLE_TRACKING=true" >> .env
           echo "NX_WEBSITE_URL=http://localhost:3000" >> .env
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/db" >> .env
 
@@ -190,6 +191,7 @@ jobs:
           cp .env.dist .env
           echo "NX_GIPHY_API_KEY=${{ secrets.GIPHY_API_KEY }}" >> .env
           echo "NX_SKIP_RATE_LIMIT=true" >> .env
+          echo "NX_DISABLE_TRACKING=true" >> .env
 
       - name: Start database
         run: docker-compose up -d db && sleep 10
@@ -360,6 +362,7 @@ jobs:
         run: |
           cp .env.dist .env
           echo "NX_SKIP_RATE_LIMIT=true" >> .env
+          echo "NX_DISABLE_TRACKING=true" >> .env
 
       - name: Start database
         run: docker-compose up -d db && sleep 10
