@@ -96,7 +96,7 @@ jobs:
           file: dist/apps/browser-extension.zip
           asset_name: browser-extension.zip
           tag: ${{ needs.get-data.outputs.tag }}
-          overwrite: false
+          overwrite: true
           repo_name: ${{ secrets.REPOSITORY }}
 
       - name: Publish extension
