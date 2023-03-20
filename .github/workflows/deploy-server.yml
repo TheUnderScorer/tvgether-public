@@ -59,7 +59,7 @@ jobs:
           ref: ${{ github.event.client_payload.github.ref }}
 
       - name: Install Railway
-        run: npm i -g @railway/cli
+        run: npm i -g @railway/cli@v2.1.0
 
       - name: Deploy
         run: railway up -s server -v
