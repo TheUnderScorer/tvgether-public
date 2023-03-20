@@ -88,11 +88,6 @@ jobs:
           name: browser-extension
           path: dist/apps/browser-extension
 
-      - uses: vimtor/action-zip@v1
-        with:
-          files: dist/apps/browser-extension
-          dest: dist/apps/browser-extension.zip
-
       - name: Upload file to release
         if: ${{ needs.get-data.outputs.tag }}
         uses: svenstaro/upload-release-action@v2
@@ -103,3 +98,13 @@ jobs:
           tag: ${{ needs.get-data.outputs.tag }}
           overwrite: false
           repo_name: ${{ secrets.REPOSITORY }}
+
+      - name: Publish extension
+        if: ${{ !contains(needs.get-data.outputs.tag , 'test') }}
+        run: npx nx run browser-extension:publish
+        env:
+          EXTENSION_ID: ${{ secrets.EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.UPLOAD_EXTENSION_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.UPLOAD_EXTENSION_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.UPLOAD_EXTENSION_REFRESH_TOKEN }}
+
