@@ -228,7 +228,7 @@ jobs:
 
       - name: Update snapshots
         if: ${{ github.event.client_payload.update_snapshots == 'true' }}
-        run: npx nx run browser-extension-e2e:e2e  --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} -g 'UI snapshots' --update-snapshots
+        run: npx nx run browser-extension-e2e:e2e --skip-nx-cache --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} -g 'UI snapshots' --update-snapshots
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         if: ${{ github.event.client_payload.update_snapshots == 'true' }}
